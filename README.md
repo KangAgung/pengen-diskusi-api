@@ -1,2 +1,2 @@
 # pengen-diskusi-api
-Submission for Menjadi Back-end Developer Expert Course
+Submission for [Menjadi Back-End Developer Expert](https://www.dicoding.com/academies/276) Course from Dicoding
