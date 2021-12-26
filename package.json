@@ -6,10 +6,10 @@
   "scripts": {
     "start": "node src/app.js",
     "start:dev": "eslint ./ --fix && nodemon src/app.js",
-    "test": "eslint ./ --fix && jest --setupFiles dotenv/config -i",
+    "test": "eslint ./ --fix && jest --testTimeout=15000 --setupFiles dotenv/config -i",
     "test:watch:change": "jest --watch --setupFiles dotenv/config -i",
     "test:watch": "jest --watchAll --coverage --setupFiles dotenv/config -i",
-    "migrate": "node-pg-migrate",
+    "migrate": "node-pg-migrate --reject-unauthorized=false",
     "migrate:test": "node-pg-migrate -f config/database/test.json"
   },
   "keywords": [],
