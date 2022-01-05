@@ -1,19 +1,14 @@
 class DeleteCommentUseCase {
-  constructor({ commentRepository, authenticationTokenManager }) {
+  constructor({ commentRepository }) {
     this._commentRepository = commentRepository;
-    this._authenticationTokenManager = authenticationTokenManager;
   }
 
-  async execute(useCaseParam, useCaseHeader) {
-    const { commentId } = useCaseParam;
-    const accessToken = await this._authenticationTokenManager
-      .getTokenFromHeader(useCaseHeader.authorization);
-    await this._authenticationTokenManager.verifyAccessToken(accessToken);
-    const { id: ownerId } = await this._authenticationTokenManager.decodePayload(accessToken);
+  async execute(useCaseParam, useCaseAuth) {
+    const { id: owner } = useCaseAuth;
 
-    await this._commentRepository.findCommentById(commentId);
-    await this._commentRepository.verifyCommentOwnership({ commentId, ownerId });
-    await this._commentRepository.deleteCommentById(commentId);
+    await this._commentRepository.findCommentById(useCaseParam.commentId);
+    await this._commentRepository.verifyCommentOwnership({ commentId: useCaseParam.commentId, owner });
+    await this._commentRepository.deleteCommentById(useCaseParam.commentId);
   }
 }
 

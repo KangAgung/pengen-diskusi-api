@@ -2,7 +2,7 @@ const ReplyRepository = require('../../Domains/replies/ReplyRepository');
 const AddedReply = require('../../Domains/replies/entities/AddedReply');
 const AuthorizationError = require('../../Commons/exceptions/AuthorizationError');
 const NotFoundError = require('../../Commons/exceptions/NotFoundError');
-const { mapDbReply } = require('../../Commons/utils/mapDb');
+const { mapDbReply } = require('../../Commons/utils/MapDb');
 
 class ReplyRepositoryPostgres extends ReplyRepository {
   constructor(pool, idGenerator) {
@@ -11,10 +11,8 @@ class ReplyRepositoryPostgres extends ReplyRepository {
     this._idGenerator = idGenerator;
   }
 
-  async addReply(newReply) {
-    const {
-      commentId, owner, content,
-    } = newReply;
+  async addReply(newReply, owner, commentId) {
+    const { content } = newReply;
 
     const id = `reply-${this._idGenerator()}`;
     const date = new Date().toISOString();
@@ -28,10 +26,10 @@ class ReplyRepositoryPostgres extends ReplyRepository {
     return new AddedReply({ ...result.rows[0] });
   }
 
-  async verifyReplyOwnership({ ownerId, replyId }) {
+  async verifyReplyOwnership({ owner, replyId }) {
     const query = {
       text: 'SELECT 1 FROM replies WHERE owner = $1 AND id = $2',
-      values: [ownerId, replyId],
+      values: [owner, replyId],
     };
 
     const result = await this._pool.query(query);
@@ -43,7 +41,7 @@ class ReplyRepositoryPostgres extends ReplyRepository {
   async getRepliesByThreadId(id) {
     const query = {
       text: `SELECT replies.id, replies.is_deleted, replies.content, replies.date,
-              comments.id AS comment_id, users.username
+              replies.comment_id, users.username
               FROM replies 
               INNER JOIN comments ON replies.comment_id = comments.id
               INNER JOIN users ON replies.owner = users.id
@@ -66,8 +64,6 @@ class ReplyRepositoryPostgres extends ReplyRepository {
     if (!result.rowCount) {
       throw new NotFoundError('reply tidak ditemukan');
     }
-
-    return { status: 'success' };
   }
 
   async findReplyById(replyId) {

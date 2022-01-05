@@ -1,28 +1,25 @@
 /* istanbul ignore file */
+const Jwt = require('@hapi/jwt');
+const AuthenticationsTableTestHelper = require('./AuthenticationsTableTestHelper');
+const UsersTableTestHelper = require('./UsersTableTestHelper');
+
 const ServerTestHelper = {
-  async getAccessTokenAndUserIdHelper({ server, username = 'dicoding' }) {
-    const userPayload = {
-      username, password: 'secret',
-    };
+  async getAccessToken({ id = 'user-123', username = 'dicoding' }) {
+    await UsersTableTestHelper.addUser({ id, username });
 
-    const responseUser = await server.inject({
-      method: 'POST',
-      url: '/users',
-      payload: {
-        ...userPayload,
-        fullname: 'dicoding indonesia',
-      },
-    });
+    const accessToken = Jwt.token.generate(
+      { username, id },
+      process.env.ACCESS_TOKEN_KEY,
+    );
 
-    const responseAuth = await server.inject({
-      method: 'POST',
-      url: '/authentications',
-      payload: userPayload,
-    });
+    const refreshToken = Jwt.token.generate(
+      { username, id },
+      process.env.REFRESH_TOKEN_KEY,
+    );
 
-    const { id: userId } = (JSON.parse(responseUser.payload)).data.addedUser;
-    const { accessToken } = (JSON.parse(responseAuth.payload)).data;
-    return { userId, accessToken };
+    await AuthenticationsTableTestHelper.addToken(refreshToken);
+
+    return accessToken;
   },
 };
 

@@ -14,8 +14,6 @@ describe('NewReply entities', () => {
     // Arrange
     const payload = {
       content: [],
-      commentId: 123,
-      owner: {},
     };
 
     // Action and Assert
@@ -26,16 +24,12 @@ describe('NewReply entities', () => {
     // Arrange
     const payload = {
       content: 'a reply',
-      commentId: 'comment-123',
-      owner: 'user-123',
     };
 
     // Action
-    const { content, commentId, owner } = new NewReply(payload);
+    const { content } = new NewReply(payload);
 
     // Assert
     expect(content).toEqual(payload.content);
-    expect(commentId).toEqual(payload.commentId);
-    expect(owner).toEqual(payload.owner);
   });
 });

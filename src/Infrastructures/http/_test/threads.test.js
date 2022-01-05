@@ -29,9 +29,14 @@ describe('/threads endpoints', () => {
         body: 'dolor sit amet',
       };
 
+      const user = {
+        id: 'user-123',
+        username: 'dicoding',
+      };
+
       const server = await createServer(container);
 
-      const { accessToken, userId } = await ServerTestHelper.getAccessTokenAndUserIdHelper({ server });
+      const accessToken = await ServerTestHelper.getAccessToken(user);
 
       // action
       const response = await server.inject({
@@ -48,10 +53,13 @@ describe('/threads endpoints', () => {
       expect(response.statusCode).toEqual(201);
       expect(responseJson.status).toEqual('success');
       expect(responseJson.data).toBeDefined();
+      expect(typeof responseJson.data).toBe('object');
       expect(responseJson.data.addedThread).toBeDefined();
+      expect(typeof responseJson.data.addedThread).toBe('object');
       expect(responseJson.data.addedThread.id).toBeDefined();
+      expect(typeof responseJson.data.addedThread.id).toBe('string');
       expect(responseJson.data.addedThread.title).toEqual('lorem ipsum');
-      expect(responseJson.data.addedThread.owner).toEqual(userId);
+      expect(responseJson.data.addedThread.owner).toEqual(user.id);
     });
 
     it('should respond with 403 when no access token is provided', async () => {
@@ -72,8 +80,9 @@ describe('/threads endpoints', () => {
 
       const responseJson = JSON.parse(response.payload);
       expect(response.statusCode).toEqual(401);
-      expect(responseJson.status).toEqual('fail');
       expect(responseJson.message).toBeDefined();
+      expect(typeof responseJson.message).toBe('string');
+      expect(responseJson.message).not.toEqual('');
     });
 
     it('should response with 400 when payload does not meet structure specifications', async () => {
@@ -82,9 +91,14 @@ describe('/threads endpoints', () => {
         title: 'lorem ipsum',
       };
 
+      const user = {
+        id: 'user-123',
+        username: 'dicoding',
+      };
+
       const server = await createServer(container);
 
-      const { accessToken } = await ServerTestHelper.getAccessTokenAndUserIdHelper({ server });
+      const accessToken = await ServerTestHelper.getAccessToken(user);
 
       // action
       const response = await server.inject({
@@ -100,6 +114,8 @@ describe('/threads endpoints', () => {
       expect(response.statusCode).toEqual(400);
       expect(responseJson.status).toEqual('fail');
       expect(responseJson.message).toBeDefined();
+      expect(typeof responseJson.message).toBe('string');
+      expect(responseJson.message).not.toEqual('');
     });
 
     it('should response with 400 when payload does not meet data type specifications', async () => {
@@ -109,10 +125,14 @@ describe('/threads endpoints', () => {
         body: 123,
       };
 
+      const user = {
+        id: 'user-123',
+        username: 'dicoding',
+      };
+
       const server = await createServer(container);
 
-      /* add user and gain access token */
-      const { accessToken } = await ServerTestHelper.getAccessTokenAndUserIdHelper({ server });
+      const accessToken = await ServerTestHelper.getAccessToken(user);
 
       // action
       const response = await server.inject({
@@ -128,6 +148,8 @@ describe('/threads endpoints', () => {
       expect(response.statusCode).toEqual(400);
       expect(responseJson.status).toEqual('fail');
       expect(responseJson.message).toBeDefined();
+      expect(typeof responseJson.message).toBe('string');
+      expect(responseJson.message).not.toEqual('');
     });
   });
 
@@ -136,12 +158,13 @@ describe('/threads endpoints', () => {
       const server = await createServer(container);
 
       const threadId = 'thread-123';
-      await UsersTableTestHelper.addUser({ id: 'user-123', username: 'JohnDoe' });
-      await UsersTableTestHelper.addUser({ id: 'user-456', username: 'JaneDoe' });
-      await ThreadTableTestHelper.addThread({ id: threadId, owner: 'user-123' });
-      await CommentsTableTestHelper.addComment({ id: 'comment-123', threadId, owner: 'user-123' });
-      await CommentsTableTestHelper.addComment({ id: 'comment-456', threadId, owner: 'user-123' });
-      await RepliesTableTestHelper.addReply({ id: 'reply-123', commentId: 'comment-456', owner: 'user-123' });
+      await UsersTableTestHelper.addUser({ id: 'user-123', username: 'Dicoding' });
+      await UsersTableTestHelper.addUser({ id: 'user-456', username: 'DicodingIndo' });
+      await ThreadTableTestHelper.addThread({ id: threadId, owner: 'user-123', title: 'a thread' });
+      await CommentsTableTestHelper.addComment({
+        id: 'comment-123', threadId, owner: 'user-123', content: 'comment 1',
+      });
+      await RepliesTableTestHelper.addReply({ id: 'reply-123', commentId: 'comment-123', owner: 'user-123' });
       await RepliesTableTestHelper.addReply({ id: 'reply-456', commentId: 'comment-123', owner: 'user-456' });
 
       // action
@@ -154,18 +177,23 @@ describe('/threads endpoints', () => {
       expect(response.statusCode).toEqual(200);
       expect(responseJson.status).toEqual('success');
       expect(responseJson.data).toBeDefined();
+      expect(typeof responseJson.data).toBe('object');
       expect(responseJson.data.thread).toBeDefined();
-      expect(responseJson.data.thread.comments).toHaveLength(2);
-      expect(responseJson.data.thread.comments[0].replies).toHaveLength(1);
-      expect(responseJson.data.thread.comments[1].replies).toHaveLength(1);
+      expect(typeof responseJson.data.thread).toBe('object');
+      expect(responseJson.data.thread.id).toBeDefined();
+      expect(typeof responseJson.data.thread.id).toBe('string');
+      expect(responseJson.data.thread.title).toEqual('a thread');
+      expect(responseJson.data.thread.comments).toHaveLength(1);
+      expect(responseJson.data.thread.comments[0].content).toEqual('comment 1');
+      expect(responseJson.data.thread.comments[0].replies).toHaveLength(2);
     });
 
     it('should respond with 200 and with thread details with empty comments', async () => {
       const server = await createServer(container);
 
       const threadId = 'thread-123';
-      await UsersTableTestHelper.addUser({ id: 'user-123', username: 'John Doe' });
-      await ThreadTableTestHelper.addThread({ id: threadId, owner: 'user-123' });
+      await UsersTableTestHelper.addUser({ id: 'user-123', username: 'dicoding' });
+      await ThreadTableTestHelper.addThread({ id: threadId, owner: 'user-123', title: 'a title' });
 
       // action
       const response = await server.inject({
@@ -177,7 +205,12 @@ describe('/threads endpoints', () => {
       expect(response.statusCode).toEqual(200);
       expect(responseJson.status).toEqual('success');
       expect(responseJson.data).toBeDefined();
+      expect(typeof responseJson.data).toBe('object');
       expect(responseJson.data.thread).toBeDefined();
+      expect(typeof responseJson.data.thread).toBe('object');
+      expect(responseJson.data.thread.id).toBeDefined();
+      expect(typeof responseJson.data.thread.id).toBe('string');
+      expect(responseJson.data.thread.title).toEqual('a title');
       expect(responseJson.data.thread.comments).toHaveLength(0);
     });
 
@@ -193,6 +226,8 @@ describe('/threads endpoints', () => {
       expect(response.statusCode).toEqual(404);
       expect(responseJson.status).toEqual('fail');
       expect(responseJson.message).toBeDefined();
+      expect(typeof responseJson.message).toBe('string');
+      expect(responseJson.message).not.toEqual('');
     });
   });
 });
