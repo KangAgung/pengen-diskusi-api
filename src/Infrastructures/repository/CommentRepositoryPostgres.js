@@ -2,7 +2,7 @@ const NotFoundError = require('../../Commons/exceptions/NotFoundError');
 const AuthorizationError = require('../../Commons/exceptions/AuthorizationError');
 const AddedComment = require('../../Domains/comments/entities/AddedComment');
 const CommentRepository = require('../../Domains/comments/CommentRepository');
-const { mapDbComment } = require('../../Commons/utils/mapDb');
+const { mapDbComment } = require('../../Commons/utils/MapDb');
 
 class CommentRepositoryPostgres extends CommentRepository {
   constructor(pool, idGenerator) {
@@ -11,8 +11,8 @@ class CommentRepositoryPostgres extends CommentRepository {
     this._idGenerator = idGenerator;
   }
 
-  async addComment(newComment) {
-    const { content, threadId, owner } = newComment;
+  async addComment(newComment, owner, threadId) {
+    const { content } = newComment;
     const id = `comment-${this._idGenerator()}`;
     const date = new Date().toISOString();
 
@@ -25,10 +25,10 @@ class CommentRepositoryPostgres extends CommentRepository {
     return new AddedComment({ ...result.rows[0] });
   }
 
-  async verifyCommentOwnership({ commentId, ownerId }) {
+  async verifyCommentOwnership({ commentId, owner }) {
     const query = {
       text: 'SELECT 1 FROM comments WHERE id = $1 AND owner = $2',
-      values: [commentId, ownerId],
+      values: [commentId, owner],
     };
 
     const result = await this._pool.query(query);
@@ -40,11 +40,7 @@ class CommentRepositoryPostgres extends CommentRepository {
 
   async getCommentsByThreadId(threadId) {
     const query = {
-      text: `SELECT  comments.id,
-              comments.content,
-              comments.date, 
-              users.username,
-              comments.is_deleted
+      text: `SELECT  comments.id, comments.content, comments.date, users.username, comments.is_deleted
               FROM comments INNER JOIN users
               ON comments.owner = users.id
               WHERE comments.thread_id = $1
@@ -65,8 +61,6 @@ class CommentRepositoryPostgres extends CommentRepository {
     if (!result.rowCount) {
       throw new NotFoundError('comment tidak dapat ditemukan');
     }
-
-    return { status: 'success' };
   }
 
   async findCommentById(commentId) {

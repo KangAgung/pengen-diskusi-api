@@ -4,7 +4,6 @@ const ThreadRepository = require('../../../Domains/threads/ThreadRepository');
 const CommentRepository = require('../../../Domains/comments/CommentRepository');
 const ReplyRepository = require('../../../Domains/replies/ReplyRepository');
 const AddReplyUseCase = require('../AddReplyUseCase');
-const AuthenticationTokenManager = require('../../security/AuthenticationTokenManager');
 
 describe('AddReplyUseCase', () => {
   it('should orchestrating the add reply use case properly', async () => {
@@ -12,39 +11,27 @@ describe('AddReplyUseCase', () => {
     const useCasePayload = {
       content: 'this is a reply',
     };
-
     const useCaseParam = {
       threadId: 'thread-123',
       commentId: 'comment-123',
     };
-
-    const useCaseHeader = {
-      authorization: 'Bearer token',
+    const useCaseAuth = {
+      id: 'user-123',
     };
-
-    const userIdFromAccessToken = 'user-123';
-
-    const expectedAccessToken = 'token';
+    const newReply = new NewReply(useCasePayload);
 
     const expectedAddedReply = new AddedReply({
       id: 'comment-123',
       content: useCasePayload.content,
-      owner: userIdFromAccessToken,
+      owner: useCaseAuth.id,
     });
 
     /** creating dependancies for use case */
     const mockThreadRepository = new ThreadRepository();
     const mockCommentRepository = new CommentRepository();
     const mockReplyRepository = new ReplyRepository();
-    const mockAuthenticationTokenManager = new AuthenticationTokenManager();
 
     /** mocking needed functions */
-    mockAuthenticationTokenManager.getTokenFromHeader = jest.fn()
-      .mockImplementation(() => Promise.resolve(expectedAccessToken));
-    mockAuthenticationTokenManager.verifyAccessToken = jest.fn()
-      .mockImplementation(() => Promise.resolve());
-    mockAuthenticationTokenManager.decodePayload = jest.fn()
-      .mockImplementation(() => Promise.resolve({ id: 'user-123' }));
     mockThreadRepository.getThreadById = jest.fn()
       .mockImplementation(() => Promise.resolve());
     mockCommentRepository.findCommentById = jest.fn()
@@ -57,27 +44,19 @@ describe('AddReplyUseCase', () => {
       threadRepository: mockThreadRepository,
       commentRepository: mockCommentRepository,
       replyRepository: mockReplyRepository,
-      authenticationTokenManager: mockAuthenticationTokenManager,
     });
 
     // action
     const addedReply = await addReplyUseCase.execute(
-      useCasePayload, useCaseParam, useCaseHeader,
+      useCasePayload, useCaseParam, useCaseAuth,
     );
 
     // assert
     expect(addedReply).toStrictEqual(expectedAddedReply);
-    expect(mockAuthenticationTokenManager.getTokenFromHeader)
-      .toBeCalledWith(useCaseHeader.authorization);
-    expect(mockAuthenticationTokenManager.verifyAccessToken).toBeCalledWith(expectedAccessToken);
-    expect(mockAuthenticationTokenManager.decodePayload).toBeCalledWith(expectedAccessToken);
     expect(mockThreadRepository.getThreadById).toBeCalledWith(useCaseParam.threadId);
+    expect(mockThreadRepository.getThreadById).toBeTruthy();
     expect(mockCommentRepository.findCommentById).toBeCalledWith(useCaseParam.commentId);
-    expect(mockReplyRepository.addReply).toBeCalledWith(new NewReply({
-      threadId: useCaseParam.threadId,
-      commentId: useCaseParam.commentId,
-      owner: userIdFromAccessToken,
-      content: useCasePayload.content,
-    }));
+    expect(mockCommentRepository.findCommentById).toBeTruthy();
+    expect(mockReplyRepository.addReply).toBeCalledWith(newReply, useCaseAuth.id, useCaseParam.commentId);
   });
 });
