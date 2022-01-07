@@ -12,11 +12,14 @@ class AddReplyUseCase {
   async execute(useCasePayload, useCaseParam, useCaseAuth) {
     const { id } = useCaseAuth;
 
-    await this._threadRepository.getThreadById(useCaseParam.threadId);
-    await this._commentRepository.findCommentById(useCaseParam.commentId);
-
+    await this._verifyCommentAvailability(useCaseParam);
     const newReply = new NewReply(useCasePayload);
     return this._replyRepository.addReply(newReply, id, useCaseParam.commentId);
+  }
+
+  async _verifyCommentAvailability({ threadId, commentId }) {
+    await this._threadRepository.getThreadById(threadId);
+    await this._commentRepository.findCommentById(commentId);
   }
 }
 
