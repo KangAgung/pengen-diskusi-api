@@ -64,11 +64,9 @@ describe('ReplyRepositoryPostgres', () => {
         replyId: 'reply-123',
       };
 
-      // action
-      const verify = await replyRepositoryPostgres.verifyReplyOwnership(payload);
-
       // assert
-      expect(verify).toBeUndefined();
+      await expect(replyRepositoryPostgres.verifyReplyOwnership(payload))
+        .resolves.not.toThrowError();
     });
 
     it('should throw error when reply not belong to user', async () => {
@@ -132,11 +130,9 @@ describe('ReplyRepositoryPostgres', () => {
       const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {}, {});
       await RepliesTableTestHelper.addReply({});
 
-      // action
-      const reply = await replyRepositoryPostgres.deleteReplyById('reply-123');
-
       // assert
-      expect(reply).toBeUndefined();
+      await expect(replyRepositoryPostgres.deleteReplyById('reply-123'))
+        .resolves.not.toThrowError();
     });
 
     it('should change value of is_deleted column in the database when reply is deleted', async () => {
@@ -172,7 +168,7 @@ describe('ReplyRepositoryPostgres', () => {
 
       // assert
       await expect(replyRepositoryPostgres.findReplyById('reply-123'))
-        .resolves.toBeUndefined();
+        .resolves.not.toThrowError();
     });
 
     it('should throw error when reply is not found', async () => {

@@ -60,11 +60,9 @@ describe('CommentRepositoryPostgres', () => {
       });
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
 
-      // action
-      const comment = await commentRepositoryPostgres.deleteCommentById('comment-123');
-
       // assert
-      expect(comment).toBeUndefined();
+      await expect(commentRepositoryPostgres.deleteCommentById('comment-123'))
+        .resolves.not.toThrowError();
     });
 
     it('should change value of is_deleted column in the database when comment is deleted', async () => {
@@ -168,7 +166,7 @@ describe('CommentRepositoryPostgres', () => {
 
       // assert
       await expect(commentRepositoryPostgres.findCommentById('comment-123'))
-        .resolves.toBeUndefined();
+        .resolves.not.toThrowError();
     });
 
     it('should throw NotFoundError when comment is not found', async () => {
