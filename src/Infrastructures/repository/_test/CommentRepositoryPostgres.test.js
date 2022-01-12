@@ -60,11 +60,9 @@ describe('CommentRepositoryPostgres', () => {
       });
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {}, {});
 
-      // action
-      const comment = await commentRepositoryPostgres.deleteCommentById('comment-123');
-
       // assert
-      expect(comment).toBeUndefined();
+      await expect(commentRepositoryPostgres.deleteCommentById('comment-123'))
+        .resolves.not.toThrowError();
     });
 
     it('should change value of is_deleted column in the database when comment is deleted', async () => {
@@ -101,13 +99,10 @@ describe('CommentRepositoryPostgres', () => {
 
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
-      // action
-      const comment = await commentRepositoryPostgres.verifyCommentOwnership({
-        commentId: 'comment-123', owner: 'user-123',
-      });
-
       // assert
-      expect(comment).toBeUndefined();
+      await expect(commentRepositoryPostgres.verifyCommentOwnership({
+        commentId: 'comment-123', owner: 'user-123',
+      })).resolves.not.toThrowError();
     });
 
     it('should throw error if comment not belong to user', async () => {
@@ -131,21 +126,23 @@ describe('CommentRepositoryPostgres', () => {
           id: 'comment-123',
           date: new Date('2021-08-09T07:59:48.766Z'),
           content: 'first comment',
+          is_deleted: false,
         },
         {
           id: 'comment-456',
           date: new Date('2021-09-09T07:59:48.766Z'),
           content: 'second comment',
+          is_deleted: false,
         },
       ];
 
-      await CommentsTableTestHelper.addComment(comment[0]);
-      await CommentsTableTestHelper.addComment(comment[1]);
+      await CommentsTableTestHelper.addComment({ ...comment[0], isDeleted: comment[0].is_deleted });
+      await CommentsTableTestHelper.addComment({ ...comment[1], isDeleted: comment[1].is_deleted });
       const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
 
       const expectedComment = [
-        { ...comment[0], username: 'user' },
-        { ...comment[1], username: 'user' },
+        { username: 'user', ...comment[0] },
+        { username: 'user', ...comment[1] },
       ];
 
       // action
@@ -169,7 +166,7 @@ describe('CommentRepositoryPostgres', () => {
 
       // assert
       await expect(commentRepositoryPostgres.findCommentById('comment-123'))
-        .resolves.toBeUndefined();
+        .resolves.not.toThrowError();
     });
 
     it('should throw NotFoundError when comment is not found', async () => {

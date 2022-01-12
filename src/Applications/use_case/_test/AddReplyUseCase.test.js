@@ -46,6 +46,8 @@ describe('AddReplyUseCase', () => {
       replyRepository: mockReplyRepository,
     });
 
+    const spyVerifyCommentAvailability = jest.spyOn(addReplyUseCase, '_verifyCommentAvailability');
+
     // action
     const addedReply = await addReplyUseCase.execute(
       useCasePayload, useCaseParam, useCaseAuth,
@@ -53,6 +55,7 @@ describe('AddReplyUseCase', () => {
 
     // assert
     expect(addedReply).toStrictEqual(expectedAddedReply);
+    expect(spyVerifyCommentAvailability).toBeCalledTimes(1);
     expect(mockThreadRepository.getThreadById).toBeCalledWith(useCaseParam.threadId);
     expect(mockThreadRepository.getThreadById).toBeTruthy();
     expect(mockCommentRepository.findCommentById).toBeCalledWith(useCaseParam.commentId);

@@ -7,14 +7,38 @@ class getThreadUseCase {
 
   async execute(useCaseParam) {
     const threadDetail = await this._threadRepository.getThreadById(useCaseParam.threadId);
-    threadDetail.comments = await this._commentRepository.getCommentsByThreadId(useCaseParam.threadId);
-    const threadReplies = await this._replyRepository.getRepliesByThreadId(useCaseParam.threadId);
-    threadDetail.comments = threadDetail.comments.map((comment) => {
-      comment.replies = threadReplies.filter((reply) => (reply.commentId === comment.id));
-      return comment;
-    });
+    let threadComments = await this._commentRepository.getCommentsByThreadId(useCaseParam.threadId);
+    let threadReplies = await this._replyRepository.getRepliesByThreadId(useCaseParam.threadId);
+
+    threadComments = await this._checkDeletedComments(threadComments);
+    threadReplies = await this._checkDeletedReplies(threadReplies);
+    threadDetail.comments = await this._mapRepliesForComments(threadComments, threadReplies);
 
     return threadDetail;
+  }
+
+  async _checkDeletedComments(comments) {
+    return comments.map(({ is_deleted, content, ...rest }) => ({
+      content: is_deleted ? '**komentar telah dihapus**' : content,
+      ...rest,
+    }));
+  }
+
+  async _checkDeletedReplies(replies) {
+    return replies.map(({ is_deleted, content, ...rest }) => ({
+      content: is_deleted ? '**balasan telah dihapus**' : content,
+      ...rest,
+    }));
+  }
+
+  async _mapRepliesForComments(comments, replies) {
+    return comments.map((comment) => {
+      const newComment = comment;
+      newComment.replies = replies
+        .filter((reply) => (reply.comment_id === comment.id))
+        .map(({ comment_id, ...rest }) => ({ ...rest }));
+      return newComment;
+    });
   }
 }
 

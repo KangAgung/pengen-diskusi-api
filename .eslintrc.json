@@ -18,8 +18,6 @@
     "no-unused-vars": "off",
     "no-console": "off",
     "max-len": "off",
-    "camelcase": "off",
-    "no-param-reassign": "off",
-    "no-shadow": "off"
+    "camelcase": "off"
   }
 }
