@@ -3,6 +3,7 @@ const CommentRepository = require('../../../Domains/comments/CommentRepository')
 const ReplyRepository = require('../../../Domains/replies/ReplyRepository');
 const DetailThread = require('../../../Domains/threads/entities/DetailThread');
 const GetThreadUseCase = require('../GetThreadUseCase');
+const LikeRepository = require('../../../Domains/likes/LikeRepository');
 
 describe('GetThreadUseCase', () => {
   it('should orchestrating the get thread detail action correctly', async () => {
@@ -62,12 +63,14 @@ describe('GetThreadUseCase', () => {
         username: 'userA',
         date: '2021-09-08T07:59:48.766Z',
         content: '**komentar telah dihapus**',
+        likeCount: 0,
       },
       {
         id: 'comment-456',
         username: 'userB',
         date: '2021-10-08T07:59:48.766Z',
         content: 'this is another comment',
+        likeCount: 0,
       },
     ];
 
@@ -90,6 +93,7 @@ describe('GetThreadUseCase', () => {
     const mockThreadRepository = new ThreadRepository();
     const mockCommentRepository = new CommentRepository();
     const mockReplyRepository = new ReplyRepository();
+    const mockLikeRepository = new LikeRepository();
 
     /** mocking needed function */
     mockThreadRepository.getThreadById = jest.fn()
@@ -98,12 +102,15 @@ describe('GetThreadUseCase', () => {
       .mockImplementation(() => Promise.resolve(retrieveComment));
     mockReplyRepository.getRepliesByThreadId = jest.fn()
       .mockImplementation(() => Promise.resolve(retrieveReply));
+    mockLikeRepository.getLikeCount = jest.fn()
+      .mockImplementation(() => Promise.resolve(0));
 
     /** creating use case instance */
     const getThreadDetailUseCase = new GetThreadUseCase({
       threadRepository: mockThreadRepository,
       commentRepository: mockCommentRepository,
       replyRepository: mockReplyRepository,
+      likeRepository: mockLikeRepository,
     });
 
     const expectedCommentsAndReplies = [
@@ -114,6 +121,7 @@ describe('GetThreadUseCase', () => {
     const spyCheckDeletedComments = jest.spyOn(getThreadDetailUseCase, '_checkDeletedComments');
     const spyCheckDeletedReplies = jest.spyOn(getThreadDetailUseCase, '_checkDeletedReplies');
     const spyMapRepliesForComments = jest.spyOn(getThreadDetailUseCase, '_mapRepliesForComments');
+    const spyGetLikeCountComments = jest.spyOn(getThreadDetailUseCase, '_getLikeCountComments');
 
     // action
     const useCaseResult = await getThreadDetailUseCase.execute(useCaseParam);
@@ -125,8 +133,12 @@ describe('GetThreadUseCase', () => {
     expect(mockThreadRepository.getThreadById).toBeCalledWith(useCaseParam.threadId);
     expect(mockCommentRepository.getCommentsByThreadId).toBeCalledWith(useCaseParam.threadId);
     expect(mockReplyRepository.getRepliesByThreadId).toBeCalledWith(useCaseParam.threadId);
+    expect(mockLikeRepository.getLikeCount).toBeCalledTimes(2);
+    expect(mockLikeRepository.getLikeCount).toBeCalledWith(comments[0].id);
+    expect(mockLikeRepository.getLikeCount).toBeCalledWith(comments[1].id);
     expect(spyCheckDeletedComments).toBeCalledTimes(1);
     expect(spyCheckDeletedReplies).toBeCalledTimes(1);
     expect(spyMapRepliesForComments).toBeCalledTimes(1);
+    expect(spyGetLikeCountComments).toBeCalledTimes(1);
   });
 });
