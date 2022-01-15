@@ -15,5 +15,7 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: ${{secrets.APP_NAME}} #Must be unique in Heroku
           heroku_email: ${{secrets.HEROKU_EMAIL}}
-          buildpack: "https://github.com/heroku/heroku-buildpack-nodejs.git"
-          procfile: "web: npm start"
+          buildpack: |
+            "https://github.com/heroku/heroku-buildpack-nodejs.git"
+            "https://github.com/heroku/heroku-buildpack-nginx.git"
+          procfile: "web: bin/start-nginx npm start"
