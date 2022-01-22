@@ -1,0 +1,7 @@
+{
+  "user": "<YOUR_PG_TEST_USER>",
+  "password": "<YOUR_PG_TEST_PASSWORD>",
+  "host": "localhost",
+  "port": 5432,
+  "database": "<YOUR_PG_DB_TEST_NAME>"
+}
