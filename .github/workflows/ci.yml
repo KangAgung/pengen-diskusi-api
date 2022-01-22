@@ -26,7 +26,7 @@ jobs:
     - name: npm install migrate and test
       run: |
         npm install
-        npm run migrate up --reject-unauthorized=false
+        npm run migrate up
         EXPORT NODE_ENV=staging && npm run test
     env:
         CI: true
