@@ -12,7 +12,7 @@ const likes = require('../../Interfaces/http/api/likes');
 const createServer = async (container) => {
   const server = Hapi.server({
     host: process.env.HOST,
-    port: '/tmp/nginx.socket',
+    port: process.env.NODE_ENV === 'production' ? '/tmp/nginx.socket' : process.env.PORT,
   });
 
   await server.register([{
