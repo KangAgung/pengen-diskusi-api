@@ -26,8 +26,8 @@ jobs:
     - name: npm install migrate and test
       run: |
         npm install
-        npm run migrate up
-        npm run test
+        npm run migrate up --reject-unauthorized=false
+        EXPORT NODE_ENV=staging && npm run test
     env:
         CI: true
         PGHOST_TEST: ${{ secrets.PGHOST_TEST }}
