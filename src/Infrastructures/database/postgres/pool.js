@@ -15,6 +15,13 @@ const herokuConfig = {
   },
 };
 
-const pool = process.env.NODE_ENV === 'test' ? new Pool({ ...testConfig, ...herokuConfig }) : new Pool({ ...herokuConfig });
+const createPool = () => {
+  if (process.env.NODE_ENV === 'production') return new Pool({ ...herokuConfig });
+  if (process.env.NODE_ENV === 'test') return new Pool({ ...testConfig });
+  if (process.env.NODE_ENV === 'development') return new Pool();
+  return new Pool({ ...testConfig, ...herokuConfig });
+};
+
+const pool = createPool();
 
 module.exports = pool;
