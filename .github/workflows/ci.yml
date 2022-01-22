@@ -27,7 +27,7 @@ jobs:
       run: |
         npm install
         npm run migrate up
-        EXPORT NODE_ENV=staging && npm run test
+        export NODE_ENV=staging && npm run test
     env:
         CI: true
         PGHOST_TEST: ${{ secrets.PGHOST_TEST }}
