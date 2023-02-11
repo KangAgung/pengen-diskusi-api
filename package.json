@@ -32,6 +32,6 @@
     "eslint-plugin-import": "^2.23.4",
     "jest": "^27.0.6",
     "node-pg-migrate": "^5.10.0",
-    "nodemon": "^2.0.9"
+    "nodemon": "^2.0.20"
   }
 }
